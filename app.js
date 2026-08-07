@@ -1,5 +1,5 @@
 const STORAGE_KEY = "linoleumCalcProject";
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycby_yVo-DDsrUzbSNcXgzoblrR7L4e2eTTYGpa-juNBEDe3MnRxHpkjetiBeiO3-xgTTQg/exec";
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxFNDZVhVu4z5hBoYhcRXyzpuOYWewZ77Lo8_AsEUu0kt_ctwbRQYRplixFn7kjoAeL/exec";
 
 const ROOM_TYPES = [
   {code:"living", name:"гостиная"},
