@@ -59,13 +59,16 @@ function collectData(units) {
       const rawLength = parseNum(r.querySelector(".room-length").value);
       const rawWidth = parseNum(r.querySelector(".room-width").value);
       const roomComment = r.querySelector(".room-comment").value.trim();
+      const rawAllowance = r.querySelector(".room-allowance").value.trim();
+      const customAllowanceCm = rawAllowance === "" ? null : parseNum(rawAllowance);
       if (!Number.isFinite(rawLength) || !Number.isFinite(rawWidth)) return;
       rooms.push({
         typeName: roomTypeName(typeSelect, customInput),
         code: codeInput.value.trim(),
         length: toMeters(rawLength, units),
         width: toMeters(rawWidth, units),
-        comment: roomComment
+        comment: roomComment,
+        allowanceCm: Number.isFinite(customAllowanceCm) ? customAllowanceCm : null
       });
     });
     if (rooms.length) apartments.push({ number, name, comment, rooms });
@@ -84,8 +87,8 @@ function calculateRoom(room, allowanceM, rollWidths, mode) {
       { rollWidth: rw, length: roomLenWithAllowance, width: roomWidthWithAllowance }
     ];
     options.forEach((opt) => {
-      const strips = Math.ceil(opt.width / rollWidth);
-      const waste = strips * rollWidth - opt.width;
+      const strips = Math.ceil(opt.width / rw);
+      const waste = strips * rw - opt.width;
       const seams = strips - 1;
       const score = mode === "seams" ? seams : waste;
       if (!best || score < best.score) {
@@ -126,6 +129,7 @@ function createRoom(container) {
     clone.querySelector(".room-code").value = room.querySelector(".room-code").value;
     clone.querySelector(".room-length").value = room.querySelector(".room-length").value;
     clone.querySelector(".room-width").value = room.querySelector(".room-width").value;
+    clone.querySelector(".room-allowance").value = room.querySelector(".room-allowance").value;
     clone.querySelector(".room-comment").value = room.querySelector(".room-comment").value;
   });
 
@@ -154,6 +158,7 @@ function createApartment() {
       nr.querySelector(".room-code").value = r.querySelector(".room-code").value;
       nr.querySelector(".room-length").value = r.querySelector(".room-length").value;
       nr.querySelector(".room-width").value = r.querySelector(".room-width").value;
+      nr.querySelector(".room-allowance").value = r.querySelector(".room-allowance").value;
       nr.querySelector(".room-comment").value = r.querySelector(".room-comment").value;
     });
   });
@@ -184,6 +189,19 @@ function saveProject() {
   showMessage("Проект сохранён в браузере", false);
 }
 
+function fillRoomFields(r, room, units) {
+  const typeSelect = r.querySelector(".room-type");
+  const match = ROOM_TYPES.find((t) => t.name === room.typeName);
+  typeSelect.value = match ? match.code : "custom";
+  typeSelect.dispatchEvent(new Event("change"));
+  if (!match) r.querySelector(".room-custom").value = room.typeName;
+  r.querySelector(".room-code").value = room.code || "";
+  r.querySelector(".room-length").value = units === "mm" ? Math.round(room.length * 1000) : room.length;
+  r.querySelector(".room-width").value = units === "mm" ? Math.round(room.width * 1000) : room.width;
+  r.querySelector(".room-allowance").value = (room.allowanceCm !== null && room.allowanceCm !== undefined) ? room.allowanceCm : "";
+  r.querySelector(".room-comment").value = room.comment || "";
+}
+
 function loadProject() {
   const data = window.linoleumStorage.load();
   if (!data) { createApartment(); return; }
@@ -206,15 +224,7 @@ function loadProject() {
     roomsContainer.innerHTML = "";
     a.rooms.forEach((room) => {
       const r = createRoom(roomsContainer);
-      const typeSelect = r.querySelector(".room-type");
-      const match = ROOM_TYPES.find((t) => t.name === room.typeName);
-      typeSelect.value = match ? match.code : "custom";
-      typeSelect.dispatchEvent(new Event("change"));
-      if (!match) r.querySelector(".room-custom").value = room.typeName;
-      r.querySelector(".room-code").value = room.code || "";
-      r.querySelector(".room-length").value = settings.units === "mm" ? Math.round(room.length * 1000) : room.length;
-      r.querySelector(".room-width").value = settings.units === "mm" ? Math.round(room.width * 1000) : room.width;
-      r.querySelector(".room-comment").value = room.comment || "";
+      fillRoomFields(r, room, settings.units);
     });
   });
 }
@@ -229,10 +239,13 @@ function calculate() {
 
   apartments.forEach((apt) => {
     apt.rooms.forEach((room) => {
-      const res = calculateRoom(room, settings.allowanceM, settings.rollWidths, settings.mode);
+      const roomAllowanceM = (room.allowanceCm !== null && room.allowanceCm !== undefined)
+        ? room.allowanceCm / 100
+        : settings.allowanceM;
+      const res = calculateRoom(room, roomAllowanceM, settings.rollWidths, settings.mode);
       const marking = `${apt.name} ${room.typeName} ${room.code}`.trim();
-      const roomLenWithAllowance = room.length + settings.allowanceM * 2;
-      const roomWidthWithAllowance = room.width + settings.allowanceM * 2;
+      const roomLenWithAllowance = room.length + roomAllowanceM * 2;
+      const roomWidthWithAllowance = room.width + roomAllowanceM * 2;
 
       rows.push({
         marking,
@@ -246,6 +259,7 @@ function calculate() {
         area: res.area,
         waste: res.waste,
         seams: res.seams,
+        allowanceM: roomAllowanceM,
         comment: room.comment
       });
 
@@ -311,6 +325,82 @@ function downloadCsv() {
   link.click();
 }
 
+function computeOffcutPercent(row) {
+  const offcutArea = row.waste * row.length;
+  const totalArea = row.area + offcutArea;
+  return totalArea > 0 ? (offcutArea / totalArea) * 100 : 0;
+}
+
+function downloadXlsx() {
+  const last = window.__linumLastCalc;
+  if (!last) { showMessage("Сначала выполните расчёт", true); return; }
+  if (typeof XLSX === "undefined") {
+    showMessage("Не удалось загрузить библиотеку Excel. Проверьте интернет-соединение и обновите страницу.", true);
+    return;
+  }
+
+  const units = last.settings.units;
+
+  const resultsData = [[
+    "Маркировка","Квартира","Помещение","Размер","С запасом","Рулон","Полос",
+    "Метраж","Площадь, м²","Остаток, м²","Остаток/обрезки, %","Стыков","Комментарий"
+  ]];
+
+  last.rows.forEach((r) => {
+    const offcutPercent = computeOffcutPercent(r);
+    resultsData.push([
+      r.marking,
+      r.apartment,
+      r.room,
+      r.size,
+      r.sizeWithAllowance,
+      fmtLen(r.rollWidth, units),
+      r.strips,
+      fmtLen(r.length, units),
+      Number(r.area.toFixed(2)),
+      Number(r.waste.toFixed(2)),
+      Number(offcutPercent.toFixed(1)),
+      r.seams,
+      r.comment || ""
+    ]);
+  });
+
+  const summaryData = [[
+    "Ширина рулона","Погонный метраж","Площадь, м²","Помещений","Средний остаток/обрезки, %","Маркировки"
+  ]];
+
+  [...last.summaryMap.entries()].sort((a,b)=>a[0]-b[0]).forEach(([rw, s]) => {
+    const groupRows = last.rows.filter((r) => r.rollWidth === rw);
+    let totalOffcutArea = 0;
+    let totalWithOffcut = 0;
+    groupRows.forEach((r) => {
+      const offcutArea = r.waste * r.length;
+      totalOffcutArea += offcutArea;
+      totalWithOffcut += r.area + offcutArea;
+    });
+    const avgOffcutPercent = totalWithOffcut > 0 ? (totalOffcutArea / totalWithOffcut) * 100 : 0;
+
+    summaryData.push([
+      fmtLen(rw, units),
+      fmtLen(s.totalLength, units),
+      Number(s.totalArea.toFixed(2)),
+      [...s.apartments].join("; "),
+      Number(avgOffcutPercent.toFixed(1)),
+      s.markings.join("; ")
+    ]);
+  });
+
+  const wb = XLSX.utils.book_new();
+  const wsResults = XLSX.utils.aoa_to_sheet(resultsData);
+  const wsSummary = XLSX.utils.aoa_to_sheet(summaryData);
+  XLSX.utils.book_append_sheet(wb, wsResults, "Результаты");
+  XLSX.utils.book_append_sheet(wb, wsSummary, "Сводка");
+
+  const fileName = (last.settings.projectName || "linoleum") + "_zakaz.xlsx";
+  XLSX.writeFile(wb, fileName);
+  showMessage("Файл Excel сформирован: " + fileName, false);
+}
+
 function isAppsScriptConfigured() {
   return !!APPS_SCRIPT_URL && APPS_SCRIPT_URL.indexOf("https://") === 0;
 }
@@ -351,11 +441,11 @@ async function exportSheets() {
 async function refreshArchiveList() {
   if (!isAppsScriptConfigured()) return;
   const select = document.getElementById("archiveSelect");
-  select.innerHTML = "<option value="">Загрузка…</option>";
+  select.innerHTML = '<option value="">Загрузка…</option>';
   try {
     const resp = await fetch(APPS_SCRIPT_URL);
     const data = await resp.json();
-    select.innerHTML = "<option value="">Выберите расчёт</option>";
+    select.innerHTML = '<option value="">Выберите расчёт</option>';
     (data.items || []).forEach((item) => {
       const opt = document.createElement("option");
       opt.value = item.id;
@@ -363,7 +453,7 @@ async function refreshArchiveList() {
       select.appendChild(opt);
     });
   } catch (err) {
-    select.innerHTML = "<option value="">Ошибка загрузки</option>";
+    select.innerHTML = '<option value="">Ошибка загрузки</option>';
   }
 }
 
@@ -402,15 +492,7 @@ function loadProjectFromData(data) {
     roomsContainer.innerHTML = "";
     a.rooms.forEach((room) => {
       const r = createRoom(roomsContainer);
-      const typeSelect = r.querySelector(".room-type");
-      const match = ROOM_TYPES.find((t) => t.name === room.typeName);
-      typeSelect.value = match ? match.code : "custom";
-      typeSelect.dispatchEvent(new Event("change"));
-      if (!match) r.querySelector(".room-custom").value = room.typeName;
-      r.querySelector(".room-code").value = room.code || "";
-      r.querySelector(".room-length").value = settings.units === "mm" ? Math.round(room.length * 1000) : room.length;
-      r.querySelector(".room-width").value = settings.units === "mm" ? Math.round(room.width * 1000) : room.width;
-      r.querySelector(".room-comment").value = room.comment || "";
+      fillRoomFields(r, room, settings.units);
     });
   });
 }
@@ -445,6 +527,7 @@ function init() {
     location.reload();
   });
   document.getElementById("downloadCsv").addEventListener("click", downloadCsv);
+  document.getElementById("downloadXlsx").addEventListener("click", downloadXlsx);
   document.getElementById("exportSheets").addEventListener("click", exportSheets);
   document.getElementById("refreshArchive").addEventListener("click", refreshArchiveList);
   document.getElementById("loadArchive").addEventListener("click", loadArchive);

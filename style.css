@@ -8,7 +8,7 @@ header div span{font-size:13px;opacity:.85;}
 .topnav a.active{background:#fff;color:#1f6f43;font-weight:600;}
 .topnav a:hover{background:rgba(255,255,255,.25);}
 .topnav a.active:hover{background:#fff;}
-main{max-width:1200px;margin:0 auto;padding:24px;display:flex;flex-direction:column;gap:20px;}
+main{max-width:1280px;margin:0 auto;padding:24px;display:flex;flex-direction:column;gap:20px;}
 .card{background:#fff;border-radius:10px;padding:20px;box-shadow:0 1px 3px rgba(0,0,0,.08);}
 .card h1,.card h2{margin:0 0 14px;font-size:18px;}
 .section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px;}
@@ -31,13 +31,13 @@ button:hover{opacity:.9;}
 .apt-actions{margin:0;flex:0 0 auto;}
 .apt-actions button{white-space:nowrap;}
 
-.rooms-head{display:grid;grid-template-columns:minmax(150px,1.3fr) minmax(90px,.75fr) minmax(90px,.75fr) minmax(140px,1.3fr) 190px;gap:10px;padding:0 2px 6px;font-size:12px;color:#9aa5b1;font-weight:600;text-transform:uppercase;letter-spacing:.02em;}
+.rooms-head{display:grid;grid-template-columns:minmax(140px,1.2fr) minmax(80px,.65fr) minmax(80px,.65fr) minmax(90px,.65fr) minmax(130px,1.1fr) 190px;gap:10px;padding:0 2px 6px;font-size:12px;color:#9aa5b1;font-weight:600;text-transform:uppercase;letter-spacing:.02em;}
 .rooms{display:flex;flex-direction:column;gap:10px;margin:0 0 14px;}
-.room{display:grid;grid-template-columns:minmax(150px,1.3fr) minmax(90px,.75fr) minmax(90px,.75fr) minmax(140px,1.3fr) 190px;gap:10px;align-items:center;background:#fff;border:1px solid #e4e7eb;border-radius:8px;padding:10px 12px;}
+.room{display:grid;grid-template-columns:minmax(140px,1.2fr) minmax(80px,.65fr) minmax(80px,.65fr) minmax(90px,.65fr) minmax(130px,1.1fr) 190px;gap:10px;align-items:center;background:#fff;border:1px solid #e4e7eb;border-radius:8px;padding:10px 12px;}
 .room-main{display:flex;flex-direction:column;gap:6px;min-width:0;}
 .room-main select,.room-main input{height:38px;}
 .room-dim{margin:0;}
-.room-dim span{display:none;}
+.room-dim .mobile-label{display:none;}
 .room>label,.room>input{margin:0;}
 .room .room-comment{height:38px;}
 .room-actions{display:flex;gap:8px;justify-content:flex-end;}
@@ -57,15 +57,16 @@ code{background:#f4f6f8;padding:2px 6px;border-radius:4px;font-size:13px;}
 @media (max-width:1200px){
   .grid.settings{grid-template-columns:repeat(3,minmax(0,1fr));}
   .rooms-head{display:none;}
-  .room{grid-template-columns:1fr 1fr;grid-template-areas:"main main" "length width" "comment comment" "actions actions";}
+  .room{grid-template-columns:1fr 1fr;grid-template-areas:"main main" "length width" "allowance allowance" "comment comment" "actions actions";}
   .room-main{grid-area:main;}
   .room-dim:nth-child(2){grid-area:length;}
   .room-dim:nth-child(3){grid-area:width;}
+  .room-dim:nth-child(4){grid-area:allowance;}
   .room .room-comment{grid-area:comment;}
   .room-actions{grid-area:actions;justify-content:stretch;}
   .room-actions button{flex:1 1 0;}
   .room-actions .delete-room{flex:0 0 44px;}
-  .room-dim span{display:block;font-size:12px;color:#9aa5b1;margin-bottom:4px;}
+  .room-dim .mobile-label{display:block;font-size:12px;color:#9aa5b1;margin-bottom:4px;}
 }
 @media (max-width:900px){.grid.settings{grid-template-columns:repeat(2,minmax(0,1fr));}}
 @media (max-width:760px){

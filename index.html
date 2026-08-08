@@ -54,7 +54,7 @@
       </div>
 
       <div class="settings-hint">
-        <span>Влияет на ввод длины/ширины помещений и на результаты. Ширины рулонов всегда указываются в метрах через запятую.</span>
+        <span>Влияет на ввод длины/ширины помещений и на результаты. Ширины рулонов всегда указываются в метрах через запятую. Запас с каждой стороны — общее значение по умолчанию: применяется ко всем помещениям, у которых поле «Запас, см» в строке помещения оставлено пустым.</span>
       </div>
 
       <div class="actions">
@@ -135,6 +135,7 @@
         <h2>Сводка для заказа</h2>
         <div class="actions">
           <button id="downloadCsv" class="secondary">Скачать CSV</button>
+          <button id="downloadXlsx" class="secondary">Скачать Excel (.xlsx)</button>
           <button id="exportSheets" class="primary">Выгрузить в Google таблицы</button>
         </div>
       </div>
@@ -182,6 +183,7 @@
         <span>Помещение</span>
         <span>Длина</span>
         <span>Ширина</span>
+        <span>Запас, см</span>
         <span>Комментарий</span>
         <span>Действия</span>
       </div>
@@ -199,8 +201,9 @@
         <input class="room-custom" placeholder="Своё название" hidden>
         <input class="room-code" placeholder="Код" hidden>
       </div>
-      <label class="room-dim"><span>Длина</span><input class="room-length" inputmode="decimal" placeholder="4,20"></label>
-      <label class="room-dim"><span>Ширина</span><input class="room-width" inputmode="decimal" placeholder="3,35"></label>
+      <label class="room-dim"><span class="mobile-label">Длина</span><input class="room-length" inputmode="decimal" placeholder="4,20"></label>
+      <label class="room-dim"><span class="mobile-label">Ширина</span><input class="room-width" inputmode="decimal" placeholder="3,35"></label>
+      <label class="room-dim"><span class="mobile-label">Запас, см</span><input class="room-allowance" type="number" min="0" step="1" placeholder="Общий"></label>
       <input class="room-comment" placeholder="Комментарий">
       <div class="room-actions">
         <button class="copy-room secondary">Копировать</button>
@@ -209,6 +212,7 @@
     </div>
   </template>
 
-  <script type="module" src="app.js"></script>
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
