@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Расчёт линолеума по квартирам и помещениям" />
+  <title>Линум — расчёт квартир</title>
+  <link rel="stylesheet" href="apartment-calculator.css" />
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="index.html">ЛИНУМ</a>
+    <span>Расчёт линолеума для квартир</span>
+    <button class="calculate-button" id="calculate-all" type="button">▣ Рассчитать</button>
+  </header>
+
+  <main class="workspace">
+    <aside class="sidebar" aria-label="Список квартир">
+      <div class="sidebar-heading"><h2>Квартиры</h2><button id="add-apartment" type="button">＋</button></div>
+      <div id="apartment-list" class="apartment-list"></div>
+    </aside>
+
+    <section class="content">
+      <section class="panel project-panel">
+        <div class="panel-heading"><h1>Параметры проекта</h1><button class="collapse-button" type="button" aria-label="Свернуть параметры">⌃</button></div>
+        <div class="project-fields">
+          <label>Название проекта<input id="project-name" value="ЖК Северный берег" /></label>
+          <label>Линолеум / артикул<input id="material" value="Tarkett Idylle Nova" /></label>
+          <label>Цена за м²<input id="price" type="number" min="0" value="650" /></label>
+          <label>Ширины рулонов, м<input id="roll-widths" value="2, 2.5, 3, 3.5, 4, 5" /></label>
+          <label>Запас с каждой стороны, см<input id="allowance" type="number" min="0" value="5" /></label>
+        </div>
+      </section>
+
+      <section class="panel apartment-panel" id="active-apartment-panel">
+        <div class="empty-state" id="empty-state">Выберите квартиру слева или добавьте новую.</div>
+        <div id="apartment-editor" hidden>
+          <div class="editor-heading">
+            <div><p class="eyebrow">Квартира</p><h2 id="active-title">—</h2></div>
+            <div class="editor-actions"><button id="copy-apartment" type="button">Копировать</button><button id="delete-apartment" class="danger" type="button">Удалить</button></div>
+          </div>
+          <div class="apartment-fields">
+            <label>Номер квартиры<input id="apartment-number" placeholder="КВ126" /></label>
+            <label>Название<input id="apartment-name" placeholder="Двухкомнатная" /></label>
+            <label>Комментарий<input id="apartment-comment" placeholder="Сдача в мае" /></label>
+          </div>
+          <div class="rooms-table">
+            <div class="room-head"><span>№</span><span>Тип помещения</span><span>Длина, м</span><span>Ширина, м</span><span>Комментарий</span><span></span></div>
+            <div id="rooms"></div>
+          </div>
+          <button class="add-room" id="add-room" type="button">＋ Добавить помещение</button>
+        </div>
+      </section>
+
+      <section class="panel results-panel" id="results-panel" hidden>
+        <div class="panel-heading"><h2>Сводка расчёта</h2><span id="total-cost">—</span></div>
+        <div id="results" class="results"></div>
+      </section>
+    </section>
+  </main>
+
+  <template id="room-template">
+    <div class="room-row">
+      <span class="room-index"></span>
+      <select class="room-type"><option>Кухня</option><option>Спальня</option><option>Коридор</option><option>Гостиная</option><option>Ванная</option><option>Балкон</option><option>Другое</option></select>
+      <input class="room-length" inputmode="decimal" placeholder="3,20" />
+      <input class="room-width" inputmode="decimal" placeholder="2,80" />
+      <input class="room-comment" placeholder="Комментарий" />
+      <button class="delete-room" type="button" aria-label="Удалить помещение">⌫</button>
+    </div>
+  </template>
+  <script src="apartment-calculator.js"></script>
+</body>
+</html>
