@@ -53,7 +53,7 @@
       </section>
 
       <section class="panel results-panel" id="results-panel" hidden>
-        <div class="panel-heading"><h2>Сводка расчёта</h2><span id="total-cost">—</span></div>
+        <div class="panel-heading"><h2>Сводка расчёта</h2><span id="total-cost">—</span><button type="button" id="downloadExcel">Скачать Excel (.xlsx)</button></div>
         <div id="results" class="results"></div>
       </section>
     </section>
@@ -70,5 +70,6 @@
     </div>
   </template>
   <script src="apartment-calculator.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 </body>
 </html>
